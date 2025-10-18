@@ -7,7 +7,7 @@
 
 > A privacy-preserving puzzle platform powered by Zama's Fully Homomorphic Encryption (FHE) technology. Solve encrypted puzzles where your answers remain confidential throughout the entire process.
 
-[🎮 Live Demo](http://localhost:8082) | [📖 FHE Guide](./FHE_COMPLIANCE_CHECK.md) | [🎯 Game Design](./docs/GameDesign.md)
+[🎮 Live Demo](https://enigmavault.vercel.app) | [📖 FHE Guide](./FHE_COMPLIANCE_CHECK.md) | [🎯 Game Design](./docs/GameDesign.md)
 
 ---
 
