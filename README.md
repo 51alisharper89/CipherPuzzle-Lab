@@ -9,6 +9,12 @@
 
 [🎮 Live Demo](https://enigmavault.vercel.app) | [📖 FHE Guide](./FHE_COMPLIANCE_CHECK.md) | [🎯 Game Design](./docs/GameDesign.md)
 
+## 🎬 Demo Video
+
+https://github.com/user-attachments/assets/demo-video.mp4
+
+> Watch EnigmaVault in action: Connect wallet, solve encrypted puzzles, and see FHE encryption working in real-time!
+
 ---
 
 ## 🌟 Features
