@@ -13,11 +13,11 @@
 
 <div align="center">
 
-[![Watch Demo](https://img.shields.io/badge/▶️_Watch_Demo-Click_Here-blue?style=for-the-badge)](./demo-video.mp4)
+![EnigmaVault Demo](./.github/demo.mp4)
 
 *See EnigmaVault in action: Connect wallet, solve encrypted puzzles, and watch FHE encryption work in real-time!*
 
-[📥 Download Video](./demo-video.mp4) • [🎮 Try Live Demo](https://enigmavault.vercel.app)
+**📥 [Download Demo Video](./.github/demo.mp4)** • **🎮 [Try Live Demo](https://enigmavault.vercel.app)**
 
 </div>
 
