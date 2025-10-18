@@ -2,26 +2,30 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CryptoLogic - Blockchain Puzzle Challenges</title>
-    <meta name="description" content="Solve cryptographic puzzles with zero-knowledge proofs. Compete fairly on-chain with encrypted answers in a cyberpunk arena." />
-    <meta name="author" content="CryptoLogic" />
+    <title>EnigmaVault - FHE Encrypted Puzzle Platform</title>
+    <meta name="description" content="Solve encrypted puzzles with Fully Homomorphic Encryption. Compete fairly on-chain with privacy-preserving answers powered by Zama FHE." />
+    <meta name="author" content="EnigmaVault" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <meta property="og:title" content="CryptoLogic - Blockchain Puzzle Challenges" />
-    <meta property="og:description" content="Solve cryptographic puzzles with zero-knowledge proofs. Compete fairly on-chain." />
+    <meta property="og:title" content="EnigmaVault - FHE Encrypted Puzzle Platform" />
+    <meta property="og:description" content="Solve encrypted puzzles with Fully Homomorphic Encryption. Compete fairly on-chain with privacy-preserving answers." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:image" content="/logo.svg" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:title" content="EnigmaVault" />
+    <meta name="twitter:description" content="FHE Encrypted Puzzle Platform" />
   </head>
 
   <body>
     <div id="root"></div>
+    <!-- ✅ 加载FHE SDK全局脚本 (必须在main.tsx之前) -->
+    <!-- WASM 文件必须和 UMD 脚本在同一目录 -->
+    <script src="/relayer-sdk-js.umd.cjs"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

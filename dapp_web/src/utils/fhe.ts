@@ -1,3 +1,9 @@
+/**
+ * ✅ FHE SDK正确集成方式：
+ * 1. 在index.html中通过<script>标签加载 relayer-sdk-js.umd.cjs
+ * 2. 这会创建全局对象 window.relayerSDK
+ * 3. bundle.js 从 window.relayerSDK 导出函数
+ */
 import { createInstance, initSDK, SepoliaConfig } from '@zama-fhe/relayer-sdk/bundle';
 import { getAddress, hexlify } from 'ethers';
 
@@ -13,7 +19,11 @@ export async function initializeFHE(): Promise<any> {
   if (initPromise) return initPromise; // Prevent duplicate initialization
 
   initPromise = (async () => {
-    await initSDK(); // Must be called first
+    // ✅ 按照 FHE 文档：initSDK() 不接受参数
+    // WASM 文件必须和 UMD 脚本在同一目录
+    await initSDK();
+
+    // ✅ 使用 SepoliaConfig 创建实例
     fheInstance = await createInstance(SepoliaConfig);
     return fheInstance;
   })();

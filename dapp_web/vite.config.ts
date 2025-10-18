@@ -15,4 +15,9 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // ✅ 按照 FHE 文档：确保 WASM 文件正确加载
+  assetsInclude: ['**/*.wasm'],
+  optimizeDeps: {
+    exclude: ['@zama-fhe/relayer-sdk'],
+  },
 }));

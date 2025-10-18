@@ -1,19 +1,40 @@
 import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trophy, Medal, Award } from 'lucide-react';
-
-const leaderboardData = [
-  { rank: 1, address: '0x742d...3a4f', score: 15420, puzzlesSolved: 12 },
-  { rank: 2, address: '0x8f9a...2b1c', score: 14200, puzzlesSolved: 11 },
-  { rank: 3, address: '0x3e5d...7c8e', score: 12800, puzzlesSolved: 10 },
-  { rank: 4, address: '0x9a2b...4f6d', score: 11500, puzzlesSolved: 9 },
-  { rank: 5, address: '0x5c7e...8a9b', score: 10200, puzzlesSolved: 8 },
-  { rank: 6, address: '0x1d4f...3e2a', score: 9100, puzzlesSolved: 7 },
-  { rank: 7, address: '0x6b8c...5f7d', score: 8300, puzzlesSolved: 7 },
-  { rank: 8, address: '0x4a9e...2c1b', score: 7500, puzzlesSolved: 6 },
-];
+import { Trophy, Medal, Award, Loader2, User } from 'lucide-react';
+import { useAccount, useReadContract } from 'wagmi';
+import { CIPHER_PUZZLE_LAB_ADDRESS, CIPHER_PUZZLE_LAB_ABI } from '@/config/contract';
+import { Badge } from '@/components/ui/badge';
 
 const Leaderboard = () => {
+  const { address, isConnected } = useAccount();
+
+  // Fetch current user's points from contract
+  const { data: userPoints, isLoading: isLoadingPoints } = useReadContract({
+    address: CIPHER_PUZZLE_LAB_ADDRESS,
+    abi: CIPHER_PUZZLE_LAB_ABI,
+    functionName: 'getPlayerPoints',
+    args: address ? [address] : undefined,
+  });
+
+  const currentUserScore = userPoints ? Number(userPoints) : 0;
+
+  // Fetch top 10 players from contract
+  const { data: topPlayersData, isLoading: isLoadingLeaderboard } = useReadContract({
+    address: CIPHER_PUZZLE_LAB_ADDRESS,
+    abi: CIPHER_PUZZLE_LAB_ABI,
+    functionName: 'getTopPlayers',
+    args: [BigInt(10)],
+  });
+
+  const leaderboardEntries = topPlayersData
+    ? (topPlayersData[0] as readonly `0x${string}`[]).map((addr, index) => ({
+        rank: index + 1,
+        address: `${addr.slice(0, 6)}...${addr.slice(-4)}`,
+        fullAddress: addr,
+        score: Number((topPlayersData[1] as readonly bigint[])[index]),
+      }))
+    : [];
+
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1:
@@ -40,35 +61,21 @@ const Leaderboard = () => {
             </p>
           </div>
 
+
           <Card className="bg-card/50 backdrop-blur-sm border-primary/20 neon-box">
             <CardHeader>
-              <CardTitle className="text-2xl text-glow">Top Solvers</CardTitle>
-              <CardDescription>Ranked by total score and puzzles solved</CardDescription>
+              <CardTitle className="text-2xl text-glow">Global Leaderboard</CardTitle>
+              <CardDescription>Top 10 puzzle solvers ranked by points</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {leaderboardData.map((entry) => (
-                  <div
-                    key={entry.rank}
-                    className="flex items-center gap-4 p-4 rounded-lg bg-background/50 border border-primary/10 hover:border-primary/30 transition-all"
-                  >
-                    <div className="flex items-center justify-center w-12">
-                      {getRankIcon(entry.rank)}
-                    </div>
-                    
-                    <div className="flex-1">
-                      <div className="font-mono text-primary">{entry.address}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {entry.puzzlesSolved} puzzles solved
-                      </div>
-                    </div>
-                    
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-glow">{entry.score.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground">points</div>
-                    </div>
-                  </div>
-                ))}
+              <div className="text-center py-16 text-muted-foreground">
+                <Trophy className="w-20 h-20 mx-auto mb-6 text-primary/40 animate-pulse" />
+                <p className="text-2xl font-semibold mb-3 text-foreground">Coming Soon</p>
+                <p className="text-lg mb-2">We're working hard to bring you the leaderboard!</p>
+                <p className="text-sm max-w-md mx-auto text-muted-foreground/80">
+                  The scoring system is currently being optimized for FHE encrypted submissions.
+                  Stay tuned for updates!
+                </p>
               </div>
             </CardContent>
           </Card>

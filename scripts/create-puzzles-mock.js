@@ -1,0 +1,94 @@
+const hre = require("hardhat");
+
+const puzzles = [
+  {
+    id: 1,
+    title: "The Genesis Block",
+    description: "In the beginning, there was a hash. Find the year when Bitcoin's genesis block was created.",
+    answer: 2009,
+    reward: "0.002"
+  },
+  {
+    id: 2,
+    title: "Binary Sequence",
+    description: "Complete the sequence: 1, 2, 4, 8, 16, 32, ?",
+    answer: 64,
+    reward: "0.001"
+  },
+  {
+    id: 3,
+    title: "Fibonacci Mystery",
+    description: "Find the 10th number in the Fibonacci sequence: 0, 1, 1, 2, 3, 5, 8, 13, 21, ?",
+    answer: 34,
+    reward: "0.0015"
+  },
+  {
+    id: 4,
+    title: "Prime Number Hunt",
+    description: "What is the 7th prime number?",
+    answer: 17,
+    reward: "0.001"
+  },
+  {
+    id: 5,
+    title: "Satoshi's Treasure",
+    description: "How many Bitcoins are there in 1 BTC?",
+    answer: 100000000,
+    reward: "0.002"
+  }
+];
+
+async function main() {
+  console.log("🎯 Creating puzzles on EnigmaVaultMock...\n");
+
+  const [deployer] = await hre.ethers.getSigners();
+  console.log("📝 Using account:", deployer.address);
+
+  const balance = await hre.ethers.provider.getBalance(deployer.address);
+  console.log("💰 Account balance:", hre.ethers.formatEther(balance), "ETH\n");
+
+  const contractAddress = "0x362826cE7c0d18E9029d1E5F4Bf4C0894eE749f6";
+  const EnigmaVault = await hre.ethers.getContractAt("EnigmaVaultMock", contractAddress);
+
+  let successCount = 0;
+  let failCount = 0;
+
+  for (const puzzle of puzzles) {
+    try {
+      console.log(`⏳ Creating Puzzle #${puzzle.id}: ${puzzle.title}`);
+      console.log(`   📊 Answer: ${puzzle.answer}`);
+
+      const tx = await EnigmaVault.createPuzzleTest(
+        puzzle.id,
+        puzzle.title,
+        puzzle.description,
+        puzzle.answer,
+        {
+          value: hre.ethers.parseEther(puzzle.reward),
+          gasLimit: 500000
+        }
+      );
+
+      const receipt = await tx.wait();
+      console.log(`   ✅ Success! Gas: ${receipt.gasUsed.toString()}, Reward: ${puzzle.reward} ETH`);
+      console.log(`   📋 Tx: ${tx.hash}\n`);
+      successCount++;
+
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    } catch (error) {
+      console.log(`   ❌ Failed: ${error.message.split('\n')[0]}`);
+      console.log("");
+      failCount++;
+    }
+  }
+
+  console.log(`\n🎉 Puzzle creation complete!`);
+  console.log(`✅ Success: ${successCount}`);
+  console.log(`❌ Failed: ${failCount}`);
+  console.log(`📊 Total: ${puzzles.length}`);
+}
+
+main().catch((error) => {
+  console.error("❌ Critical error:", error);
+  process.exitCode = 1;
+});
