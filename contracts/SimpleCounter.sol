@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "fhevm/lib/TFHE.sol";
+import { FHE, euint32 } from "@fhevm/solidity/lib/FHE.sol";
+import { ZamaEthereumConfig } from "@fhevm/solidity/config/ZamaConfig.sol";
 
 /**
  * @title SimpleCounter
  * @notice A simple encrypted counter for testing FHE deployment
  */
-contract SimpleCounter {
+contract SimpleCounter is ZamaEthereumConfig {
     euint32 private counter;
     address public owner;
 
@@ -15,14 +16,14 @@ contract SimpleCounter {
 
     constructor() {
         owner = msg.sender;
-        counter = TFHE.asEuint32(0);
-        TFHE.allow(counter, address(this));
+        counter = FHE.asEuint32(0);
+        FHE.allowThis(counter);
     }
 
     function increment() public {
-        counter = TFHE.add(counter, 1);
-        TFHE.allow(counter, address(this));
-        TFHE.allow(counter, msg.sender);
+        counter = FHE.add(counter, FHE.asEuint32(1));
+        FHE.allowThis(counter);
+        FHE.allow(counter, msg.sender);
         emit CounterIncremented(msg.sender);
     }
 
