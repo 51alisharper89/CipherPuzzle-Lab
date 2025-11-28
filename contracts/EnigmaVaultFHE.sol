@@ -2,12 +2,13 @@
 pragma solidity ^0.8.24;
 
 import { FHE, euint32, euint64, externalEuint32, ebool } from "@fhevm/solidity/lib/FHE.sol";
+import { ZamaEthereumConfig } from "@fhevm/solidity/config/ZamaConfig.sol";
 
 /**
  * @title EnigmaVaultFHE
  * @notice FHE-enabled puzzle vault with encrypted answer verification
  */
-contract EnigmaVaultFHE {
+contract EnigmaVaultFHE is ZamaEthereumConfig {
     address public owner;
     uint256 public totalPuzzles;
     uint256 public totalSolvers;
