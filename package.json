@@ -1,27 +1,32 @@
 {
-  "name": "enigmavault-contracts",
+  "name": "cipherpuzzle-lab-contracts",
   "version": "1.0.0",
-  "description": "EnigmaVault FHE-powered encrypted puzzle platform smart contracts",
+  "description": "CipherPuzzle Lab FHE-powered encrypted puzzle platform smart contracts",
   "scripts": {
-    "compile": "hardhat compile",
-    "test": "hardhat test",
-    "deploy": "hardhat run scripts/deploy.ts --network sepolia",
-    "verify": "hardhat verify --network sepolia"
+    "compile": "SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com npx hardhat compile",
+    "test": "SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com npx hardhat test",
+    "test:unit": "SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com npx hardhat test test/EnigmaVault.test.js",
+    "test:fhe": "SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com npx hardhat test test/EnigmaVaultFHE.test.js test/SimpleCounter.test.js",
+    "test:counter": "SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com npx hardhat test test/SimpleCounter.test.js",
+    "test:puzzle": "SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com npx hardhat test test/EnigmaVaultFHE.test.js",
+    "test:gas": "SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com REPORT_GAS=true npx hardhat test",
+    "deploy": "SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com npx hardhat run scripts/deploy.ts --network sepolia",
+    "verify": "npx hardhat verify --network sepolia"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@nomicfoundation/hardhat-verify": "^2.0.0",
-    "@typechain/ethers-v6": "^0.5.0",
-    "@typechain/hardhat": "^9.0.0",
-    "@types/node": "^20.0.0",
+    "@typechain/ethers-v6": "^0.5.1",
+    "@typechain/hardhat": "^9.1.0",
+    "@types/node": "^22.0.0",
     "hardhat": "^2.22.0",
-    "ts-node": "^10.9.0",
-    "typescript": "^5.0.0"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.0"
   },
   "dependencies": {
-    "@fhevm/hardhat-plugin": "^0.1.0",
-    "@fhevm/solidity": "^0.8.0",
-    "dotenv": "^16.4.0",
-    "fhevm": "^0.5.4"
+    "@fhevm/hardhat-plugin": "^0.3.0-1",
+    "@fhevm/solidity": "^0.9.1",
+    "@zama-fhe/relayer-sdk": "^0.3.0-5",
+    "dotenv": "^16.4.0"
   }
 }
