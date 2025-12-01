@@ -1,7 +1,7 @@
 // Contract configuration and ABI
 
-// ✅ Mock contract (可在标准Sepolia上运行)
-export const CIPHER_PUZZLE_LAB_ADDRESS = '0x362826cE7c0d18E9029d1E5F4Bf4C0894eE749f6' as const;
+// EnigmaVaultFHE contract deployed on Sepolia (FHE-enabled)
+export const CIPHER_PUZZLE_LAB_ADDRESS = '0x5A03982D1859C5A3f60745358F1b8d6019462C9B' as const;
 
 // Enums matching contract
 export enum PuzzleStatus {
@@ -28,12 +28,17 @@ export enum HintType {
   Relationship
 }
 
-// Contract ABI - EnigmaVault (JSON format)
+// Contract ABI - EnigmaVaultFHE (JSON format)
 export const CIPHER_PUZZLE_LAB_ABI = [
   {
     "inputs": [],
     "stateMutability": "nonpayable",
     "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "ZamaProtocolUnsupported",
+    "type": "error"
   },
   {
     "anonymous": false,
@@ -74,10 +79,29 @@ export const CIPHER_PUZZLE_LAB_ABI = [
         "internalType": "address",
         "name": "solver",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isCorrect",
+        "type": "bool"
       }
     ],
     "name": "PuzzleSolved",
     "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "confidentialProtocolId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
     "inputs": [
@@ -108,6 +132,34 @@ export const CIPHER_PUZZLE_LAB_ABI = [
       }
     ],
     "name": "createPuzzle",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "puzzleId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "uint32",
+        "name": "plainAnswer",
+        "type": "uint32"
+      }
+    ],
+    "name": "createPuzzleTest",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -213,6 +265,30 @@ export const CIPHER_PUZZLE_LAB_ABI = [
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "hasSolved",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "owner",
     "outputs": [
@@ -302,6 +378,11 @@ export const CIPHER_PUZZLE_LAB_ABI = [
         "internalType": "uint256",
         "name": "solvers",
         "type": "uint256"
+      },
+      {
+        "internalType": "euint32",
+        "name": "correctAnswer",
+        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -359,55 +440,25 @@ export const CIPHER_PUZZLE_LAB_ABI = [
 ] as const;
 
 // TypeScript interfaces
-export interface PuzzleInfo {
-  creator: string;
+export interface Puzzle {
   title: string;
-  difficulty: DifficultyLevel;
-  prizePool: bigint;
-  deadline: bigint;
-  status: PuzzleStatus;
-  playerCount: number;
-  totalAttempts: number;
-  statusChangeCount: bigint;
-}
-
-export interface PlayerProfile {
-  totalPuzzlesSolved: bigint;
-  totalAttemptsUsed: bigint;
-  totalPrizesWon: bigint;
-  hintsUsedCount: bigint;
-  firstPuzzleAt: bigint;
-  lastPuzzleAt: bigint;
-}
-
-export interface GlobalStatistics {
-  totalPuzzles: bigint;
-  totalAttempts: bigint;
-  totalPrizeDistributed: bigint;
+  description: string;
+  reward: bigint;
+  creator: `0x${string}`;
+  isActive: boolean;
+  solvers: bigint;
 }
 
 export interface CreatePuzzleParams {
   puzzleId: bigint;
   title: string;
   description: string;
-  solution: bigint;
-  difficultyScore: number;
-  difficulty: DifficultyLevel;
-  durationInDays: number;
-  maxAttempts: number;
-  availableHints: number;
-  prizePoolInEth: string;
+  rewardInWei: bigint;
 }
 
-export interface SubmitAttemptParams {
+// FHE-enabled solution submission requires encrypted answer and proof
+export interface SubmitSolutionParams {
   puzzleId: bigint;
-  answer: bigint;
-  timeTakenInSeconds: number;
-}
-
-export interface PurchaseHintParams {
-  puzzleId: bigint;
-  hintType: HintType;
-  hintValue: number;
-  paymentInEth: string;
+  encryptedAnswer: `0x${string}`;  // bytes32 - encrypted answer
+  inputProof: `0x${string}`;       // bytes - FHE input proof
 }
