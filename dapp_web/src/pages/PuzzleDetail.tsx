@@ -1,21 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
+import { useAccount, useReadContract } from 'wagmi';
 import { formatEther } from 'viem';
 import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Send, Lock, Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { ArrowLeft, Send, Lock, Loader2, Shield } from 'lucide-react';
 import { CIPHER_PUZZLE_LAB_ADDRESS, CIPHER_PUZZLE_LAB_ABI } from '@/config/contract';
-import { encryptUint32 } from '@/utils/fhe';
+import { useSubmitSolutionWithToast } from '@/hooks/usePuzzleActions';
+import { toastWarning } from '@/lib/toast-utils';
 
 const PuzzleDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { address, isConnected } = useAccount();
   const [answer, setAnswer] = useState('');
 
@@ -29,51 +28,39 @@ const PuzzleDetail = () => {
     args: [BigInt(puzzleId)],
   });
 
-  const puzzle = puzzleData ? {
-    title: (puzzleData as any[])[0] || `Puzzle #${puzzleId}`,
-    description: (puzzleData as any[])[1] || 'In the beginning, there was a hash. Find the missing value in this cryptographic sequence.',
-    reward: `${formatEther((puzzleData as any[])[2])} ETH`,
-    creator: (puzzleData as any[])[3],
-    isActive: (puzzleData as any[])[4],
-    solvers: Number((puzzleData as any[])[5]),
+  // Type the puzzle data properly
+  const puzzleArray = puzzleData as readonly [string, string, bigint, `0x${string}`, boolean, bigint] | undefined;
+
+  const puzzle = puzzleArray ? {
+    title: puzzleArray[0] || `Puzzle #${puzzleId}`,
+    description: puzzleArray[1] || 'Solve this cryptographic puzzle.',
+    reward: `${formatEther(puzzleArray[2])} ETH`,
+    creator: puzzleArray[3],
+    isActive: puzzleArray[4],
+    solvers: Number(puzzleArray[5]),
     difficulty: 'Easy' as const,
-    clue: 'SHA-256: d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592 = "The Times 03/Jan/2009 Chancellor on brink of second bailout for ?????"',
-    hint: 'Think about Bitcoin\'s genesis block message...',
+    clue: 'Use your knowledge of cryptography and blockchain to solve this puzzle.',
+    hint: 'Think carefully about the question...',
   } : null;
 
-  const { writeContract, data: hash, isPending, error: writeError } = useWriteContract();
-
-  const {
-    isLoading: isConfirming,
-    isSuccess,
-    error: confirmError
-  } = useWaitForTransactionReceipt({
-    hash,
-  });
+  // Use the FHE-enabled submit hook
+  const { submit, isLoading, isEncrypting, isSuccess } = useSubmitSolutionWithToast();
 
   const handleSubmit = async () => {
-    console.log('✅ FHE Submit clicked!');
+    console.log('FHE Submit clicked!');
     console.log('Is connected:', isConnected);
     console.log('Address:', address);
     console.log('Answer:', answer);
 
     if (!isConnected || !address) {
       console.log('Wallet not connected');
-      toast({
-        title: 'Wallet Not Connected',
-        description: 'Please connect your wallet first',
-        variant: 'destructive',
-      });
+      toastWarning('Wallet Not Connected', 'Please connect your wallet first');
       return;
     }
 
     if (!answer.trim()) {
       console.log('No answer entered');
-      toast({
-        title: 'Error',
-        description: 'Please enter an answer',
-        variant: 'destructive',
-      });
+      toastWarning('Error', 'Please enter an answer');
       return;
     }
 
@@ -82,124 +69,28 @@ const PuzzleDetail = () => {
       const answerNum = parseInt(answer);
       if (isNaN(answerNum)) {
         console.log('Invalid answer format');
-        toast({
-          title: 'Invalid Answer',
-          description: 'Please enter a numeric answer',
-          variant: 'destructive',
-        });
+        toastWarning('Invalid Answer', 'Please enter a numeric answer');
         return;
       }
 
-      // ⚠️ 临时方案：Mock合约使用明文，真正的FHE合约使用加密
-      // Mock合约地址：0x362826cE7c0d18E9029d1E5F4Bf4C0894eE749f6
-      const isMockContract = CIPHER_PUZZLE_LAB_ADDRESS.toLowerCase() === '0x362826ce7c0d18e9029d1e5f4bf4c0894ee749f6';
+      console.log('Submitting FHE-encrypted answer to blockchain...');
+      console.log('   Puzzle ID:', puzzleId);
+      console.log('   Answer (will be encrypted):', answerNum);
 
-      let handle: string;
-      let proof: string;
+      // Submit with FHE encryption
+      await submit({
+        puzzleId: BigInt(puzzleId),
+        answer: answerNum,
+      });
 
-      if (isMockContract) {
-        // Mock合约：直接将答案转为bytes32格式（明文）
-        console.log('📤 Mock合约模式：使用明文提交...');
-        handle = `0x${answerNum.toString(16).padStart(64, '0')}` as `0x${string}`;
-        proof = '0x' as `0x${string}`;
-        console.log('   答案 (明文bytes32):', handle);
-      } else {
-        // 真正的FHE合约：使用FHE加密
-        console.log('🔐 FHE合约模式：加密答案...');
-        toast({
-          title: 'Encrypting Answer',
-          description: 'Using FHE to encrypt your answer...',
-        });
-
-        const encrypted = await encryptUint32(
-          answerNum,
-          CIPHER_PUZZLE_LAB_ADDRESS,
-          address
-        );
-        handle = encrypted.handle;
-        proof = encrypted.proof;
-
-        console.log('✅ Answer encrypted with FHE');
-        console.log('   Handle:', handle.substring(0, 20) + '...');
-        console.log('   Proof:', proof.substring(0, 20) + '...');
+      // Clear answer on success
+      if (isSuccess) {
+        setAnswer('');
       }
-
-      console.log('📤 Submitting to blockchain...');
-
-      writeContract({
-        address: CIPHER_PUZZLE_LAB_ADDRESS,
-        abi: CIPHER_PUZZLE_LAB_ABI,
-        functionName: 'submitSolution',
-        args: [
-          BigInt(puzzleId),
-          handle,
-          proof
-        ],
-      });
-
-      console.log('✅ Transaction submitted');
     } catch (err) {
-      console.error('❌ Submit error:', err);
-      toast({
-        title: 'Submission Failed',
-        description: err instanceof Error ? err.message : 'Failed to encrypt or submit answer',
-        variant: 'destructive',
-      });
+      console.error('Submit error:', err);
     }
   };
-
-  // Show success toast when transaction is confirmed
-  useEffect(() => {
-    if (isSuccess && hash) {
-      toast({
-        title: 'Answer Submitted!',
-        description: `Transaction confirmed: ${hash.slice(0, 10)}...${hash.slice(-8)}`,
-      });
-      setAnswer('');
-    }
-  }, [isSuccess, hash, toast]);
-
-  // Handle write errors (user rejected, etc)
-  useEffect(() => {
-    if (writeError) {
-      console.error('WriteContract error:', writeError);
-      const errorMsg = writeError.message || 'Failed to submit transaction';
-      toast({
-        title: 'Transaction Failed',
-        description: errorMsg.includes('User rejected')
-          ? 'You rejected the transaction'
-          : errorMsg.slice(0, 100),
-        variant: 'destructive',
-      });
-    }
-  }, [writeError, toast]);
-
-  // Handle confirmation errors (transaction reverted)
-  useEffect(() => {
-    if (confirmError) {
-      console.error('Transaction confirmation error:', confirmError);
-      const errorMsg = confirmError.message || 'Transaction failed';
-      toast({
-        title: 'Transaction Reverted',
-        description: errorMsg.includes('Puzzle not active')
-          ? 'Puzzle not found or not active'
-          : errorMsg.slice(0, 100),
-        variant: 'destructive',
-      });
-    }
-  }, [confirmError, toast]);
-
-  // Log state changes
-  useEffect(() => {
-    console.log('Transaction state:', {
-      isPending,
-      isConfirming,
-      isSuccess,
-      hash,
-      writeError: writeError?.message,
-      confirmError: confirmError?.message
-    });
-  }, [isPending, isConfirming, isSuccess, hash, writeError, confirmError]);
 
   if (isPuzzleLoading) {
     return (
@@ -238,7 +129,7 @@ const PuzzleDetail = () => {
   return (
     <div className="min-h-screen relative">
       <Navbar />
-      
+
       <main className="container mx-auto px-4 pt-24 pb-16 relative z-10">
         <div className="max-w-3xl mx-auto">
           <Button
@@ -283,7 +174,7 @@ const PuzzleDetail = () => {
               </div>
 
               <div className="p-4 bg-accent/5 rounded-lg border border-accent/20">
-                <h3 className="text-sm font-semibold mb-2 text-accent">💡 Hint</h3>
+                <h3 className="text-sm font-semibold mb-2 text-accent">Hint</h3>
                 <p className="text-sm text-muted-foreground">{puzzle.hint}</p>
               </div>
             </CardContent>
@@ -291,10 +182,13 @@ const PuzzleDetail = () => {
 
           <Card className="bg-card/50 backdrop-blur-sm border-primary/20 neon-box">
             <CardHeader>
-              <CardTitle className="text-xl text-glow">Submit Your Answer</CardTitle>
+              <CardTitle className="text-xl text-glow flex items-center gap-2">
+                <Shield className="w-5 h-5 text-primary" />
+                Submit Your Answer (FHE Encrypted)
+              </CardTitle>
               <CardDescription>
-                Your answer will be encrypted and committed on-chain. 
-                The actual solution remains hidden until the reveal phase.
+                Your answer will be encrypted using Fully Homomorphic Encryption (FHE) before being sent to the blockchain.
+                The contract verifies your answer without ever revealing it.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -303,28 +197,36 @@ const PuzzleDetail = () => {
                 onChange={(e) => setAnswer(e.target.value)}
                 placeholder="Enter your answer..."
                 className="bg-input border-primary/30 focus:border-primary text-foreground font-mono"
+                type="number"
               />
               <Button
                 onClick={handleSubmit}
-                disabled={isPending || isConfirming || !isConnected}
+                disabled={isLoading || !isConnected}
                 className="w-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/50 hover:shadow-neon transition-all"
               >
-                {isPending ? (
-                  'Waiting for approval...'
-                ) : isConfirming ? (
-                  'Confirming on blockchain...'
+                {isEncrypting ? (
+                  <>
+                    <Shield className="w-4 h-4 mr-2 animate-pulse" />
+                    Encrypting with FHE...
+                  </>
+                ) : isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
                 ) : !isConnected ? (
                   'Connect Wallet First'
                 ) : (
                   <>
                     <Send className="w-4 h-4 mr-2" />
-                    Submit Answer On-Chain
+                    Submit Encrypted Answer
                   </>
                 )}
               </Button>
-              <p className="text-xs text-muted-foreground text-center">
-                🔒 Zero-knowledge proof ensures your answer stays private until reveal
-              </p>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
+                <Shield className="w-4 h-4 text-primary" />
+                <span>Protected by Zama FHE - Your answer remains private on-chain</span>
+              </div>
             </CardContent>
           </Card>
         </div>

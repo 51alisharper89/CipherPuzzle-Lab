@@ -124,7 +124,9 @@ const Index = () => {
 
     allPuzzleData.forEach((puzzleData, index) => {
       if (puzzleData) {
-        const [title, , reward, , isActive, solvers] = puzzleData as any[];
+        // Type the puzzle data properly
+        const puzzleArray = puzzleData as readonly [string, string, bigint, `0x${string}`, boolean, bigint];
+        const [title, , reward, , isActive, solvers] = puzzleArray;
         const puzzleId = index + 1;
 
         // Determine difficulty based on reward
