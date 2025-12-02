@@ -1,113 +1,159 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAccount } from 'wagmi';
-import { parseEther } from 'ethers';
+import { useCreatePuzzle, useSubmitSolution } from './useContract';
 import { useFHE } from './useFHE';
-import { useCreatePuzzle, useSubmitAttempt, usePurchaseHint } from './useContract';
-import { encryptPuzzleData, encryptAttemptData, encryptUint32 } from '../utils/fhe';
-import { CIPHER_PUZZLE_LAB_ADDRESS, CreatePuzzleParams, SubmitAttemptParams, PurchaseHintParams } from '../config/contract';
+import {
+  toastTxPending,
+  toastTxSuccess,
+  toastTxError,
+  toastUserRejected,
+  toastWarning,
+} from '../lib/toast-utils';
 
 /**
- * High-level hook for creating encrypted puzzles
- * Handles FHE encryption automatically
+ * High-level hook for creating puzzles with toast notifications
  */
-export function useCreateEncryptedPuzzle() {
+export function useCreatePuzzleWithToast() {
   const { address } = useAccount();
-  const { isInitialized } = useFHE();
   const { createPuzzle, hash, error, isPending, isConfirming, isSuccess } = useCreatePuzzle();
+  const pendingToastShown = useRef(false);
 
-  const create = useCallback(async (params: CreatePuzzleParams) => {
-    if (!address || !isInitialized) {
-      throw new Error('Wallet not connected or FHE not initialized');
+  // Show pending toast when hash is received
+  useEffect(() => {
+    if (hash && !pendingToastShown.current) {
+      pendingToastShown.current = true;
+      toastTxPending(hash);
+    }
+  }, [hash]);
+
+  // Show success toast
+  useEffect(() => {
+    if (isSuccess && hash) {
+      toastTxSuccess(hash, 'Puzzle Created Successfully!');
+      pendingToastShown.current = false;
+    }
+  }, [isSuccess, hash]);
+
+  // Show error toast
+  useEffect(() => {
+    if (error) {
+      const errorMsg = error.message || '';
+      if (errorMsg.includes('User rejected') || errorMsg.includes('user rejected')) {
+        toastUserRejected();
+      } else {
+        toastTxError(hash, error);
+      }
+      pendingToastShown.current = false;
+    }
+  }, [error, hash]);
+
+  const create = useCallback((params: {
+    puzzleId: bigint;
+    title: string;
+    description: string;
+    rewardInWei: bigint;
+  }) => {
+    if (!address) {
+      throw new Error('Wallet not connected');
     }
 
-    // Encrypt all parameters at once (shared proof)
-    const { handles, inputProof } = await encryptPuzzleData(
-      params.solution,
-      params.difficultyScore,
-      CIPHER_PUZZLE_LAB_ADDRESS,
-      address
-    );
+    pendingToastShown.current = false;
 
     createPuzzle({
       puzzleId: params.puzzleId,
       title: params.title,
       description: params.description,
-      encryptedSolution: handles[0],      // externalEuint64
-      difficultyScore: handles[1],        // externalEuint32
-      inputProof,                         // bytes (shared proof)
-      difficulty: params.difficulty,
-      duration: params.durationInDays * 24 * 60 * 60,
-      maxAttempts: params.maxAttempts,
-      availableHints: params.availableHints,
-      value: parseEther(params.prizePoolInEth),
+      value: params.rewardInWei,
     });
-  }, [address, isInitialized, createPuzzle]);
+  }, [address, createPuzzle]);
 
   return { create, hash, error, isLoading: isPending || isConfirming, isSuccess };
 }
 
 /**
- * High-level hook for submitting encrypted attempts
- * Handles FHE encryption automatically
+ * High-level hook for submitting solutions with FHE encryption and toast notifications
  */
-export function useSubmitEncryptedAttempt() {
+export function useSubmitSolutionWithToast() {
   const { address } = useAccount();
-  const { isInitialized } = useFHE();
-  const { submitAttempt, hash, error, isPending, isConfirming, isSuccess } = useSubmitAttempt();
+  const { submitSolution, hash, error, isPending, isConfirming, isSuccess } = useSubmitSolution();
+  const { encryptUint32, isInitialized: fheInitialized, isInitializing: fheInitializing, initFHE } = useFHE();
+  const pendingToastShown = useRef(false);
+  const [isEncrypting, setIsEncrypting] = useState(false);
 
-  const submit = useCallback(async (params: SubmitAttemptParams) => {
-    if (!address || !isInitialized) {
-      throw new Error('Wallet not connected or FHE not initialized');
+  // Show pending toast when hash is received
+  useEffect(() => {
+    if (hash && !pendingToastShown.current) {
+      pendingToastShown.current = true;
+      toastTxPending(hash);
+    }
+  }, [hash]);
+
+  // Show success toast
+  useEffect(() => {
+    if (isSuccess && hash) {
+      toastTxSuccess(hash, 'Answer Submitted Successfully!');
+      pendingToastShown.current = false;
+    }
+  }, [isSuccess, hash]);
+
+  // Show error toast
+  useEffect(() => {
+    if (error) {
+      const errorMsg = error.message || '';
+      if (errorMsg.includes('User rejected') || errorMsg.includes('user rejected')) {
+        toastUserRejected();
+      } else {
+        toastTxError(hash, error);
+      }
+      pendingToastShown.current = false;
+    }
+  }, [error, hash]);
+
+  const submit = useCallback(async (params: {
+    puzzleId: bigint;
+    answer: number;  // Now takes raw number, we encrypt it
+  }) => {
+    if (!address) {
+      throw new Error('Wallet not connected');
     }
 
-    // Encrypt all parameters at once (shared proof)
-    const { handles, inputProof } = await encryptAttemptData(
-      params.answer,
-      params.timeTakenInSeconds,
-      CIPHER_PUZZLE_LAB_ADDRESS,
-      address
-    );
+    pendingToastShown.current = false;
+    setIsEncrypting(true);
 
-    submitAttempt({
-      puzzleId: params.puzzleId,
-      encryptedAnswer: handles[0],   // externalEuint64
-      timeTaken: handles[1],          // externalEuint32
-      inputProof,                     // bytes (shared proof)
-    });
-  }, [address, isInitialized, submitAttempt]);
+    try {
+      // Initialize FHE if not already done
+      if (!fheInitialized) {
+        await initFHE();
+      }
 
-  return { submit, hash, error, isLoading: isPending || isConfirming, isSuccess };
-}
+      console.log('Encrypting answer with FHE...');
 
-/**
- * High-level hook for purchasing encrypted hints
- * Handles FHE encryption automatically
- */
-export function usePurchaseEncryptedHint() {
-  const { address } = useAccount();
-  const { isInitialized } = useFHE();
-  const { purchaseHint, hash, error, isPending, isConfirming, isSuccess } = usePurchaseHint();
+      // Encrypt the answer using FHE
+      const { encryptedAnswer, inputProof } = await encryptUint32(params.answer);
 
-  const purchase = useCallback(async (params: PurchaseHintParams) => {
-    if (!address || !isInitialized) {
-      throw new Error('Wallet not connected or FHE not initialized');
+      console.log('Answer encrypted, submitting to blockchain...');
+
+      // Submit the encrypted answer
+      submitSolution({
+        puzzleId: params.puzzleId,
+        encryptedAnswer,
+        inputProof,
+      });
+    } catch (err) {
+      console.error('FHE encryption error:', err);
+      toastWarning('Encryption Error', err instanceof Error ? err.message : 'Failed to encrypt answer');
+      throw err;
+    } finally {
+      setIsEncrypting(false);
     }
+  }, [address, submitSolution, encryptUint32, fheInitialized, initFHE]);
 
-    // Encrypt hint value
-    const { handle, proof } = await encryptUint32(
-      params.hintValue,
-      CIPHER_PUZZLE_LAB_ADDRESS,
-      address
-    );
-
-    purchaseHint({
-      puzzleId: params.puzzleId,
-      hintType: params.hintType,
-      hintValue: handle,             // externalEuint32
-      inputProof: proof,             // bytes
-      value: parseEther(params.paymentInEth),
-    });
-  }, [address, isInitialized, purchaseHint]);
-
-  return { purchase, hash, error, isLoading: isPending || isConfirming, isSuccess };
+  return {
+    submit,
+    hash,
+    error,
+    isLoading: isPending || isConfirming || isEncrypting || fheInitializing,
+    isEncrypting,
+    isSuccess
+  };
 }

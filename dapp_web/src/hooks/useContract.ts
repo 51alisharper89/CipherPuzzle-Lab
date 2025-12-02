@@ -2,56 +2,54 @@ import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 
 import { CIPHER_PUZZLE_LAB_ADDRESS, CIPHER_PUZZLE_LAB_ABI } from '../config/contract';
 
 // Read Hooks
-export function useGetPuzzleInfo(puzzleId: bigint) {
+export function useGetPuzzle(puzzleId: bigint) {
   return useReadContract({
     address: CIPHER_PUZZLE_LAB_ADDRESS,
     abi: CIPHER_PUZZLE_LAB_ABI,
-    functionName: 'getPuzzleInfo',
+    functionName: 'getPuzzle',
     args: [puzzleId],
   });
 }
 
-export function useGetPlayerProfile(playerAddress: string) {
+export function useGetPlayerPoints(playerAddress: `0x${string}`) {
   return useReadContract({
     address: CIPHER_PUZZLE_LAB_ADDRESS,
     abi: CIPHER_PUZZLE_LAB_ABI,
-    functionName: 'getPlayerProfile',
-    args: [playerAddress as `0x${string}`],
+    functionName: 'getPlayerPoints',
+    args: [playerAddress],
   });
 }
 
-export function useGetGlobalStatistics() {
+export function useGetTotalPuzzles() {
   return useReadContract({
     address: CIPHER_PUZZLE_LAB_ADDRESS,
     abi: CIPHER_PUZZLE_LAB_ABI,
-    functionName: 'getGlobalStatistics',
+    functionName: 'totalPuzzles',
   });
 }
 
-export function useGetAttemptCount(puzzleId: bigint, playerAddress: string) {
+export function useGetTotalSolvers() {
   return useReadContract({
     address: CIPHER_PUZZLE_LAB_ADDRESS,
     abi: CIPHER_PUZZLE_LAB_ABI,
-    functionName: 'getAttemptCount',
-    args: [puzzleId, playerAddress as `0x${string}`],
+    functionName: 'totalSolvers',
   });
 }
 
-export function useGetHintCount(puzzleId: bigint, playerAddress: string) {
+export function useGetTotalPlayers() {
   return useReadContract({
     address: CIPHER_PUZZLE_LAB_ADDRESS,
     abi: CIPHER_PUZZLE_LAB_ABI,
-    functionName: 'getHintCount',
-    args: [puzzleId, playerAddress as `0x${string}`],
+    functionName: 'getTotalPlayers',
   });
 }
 
-export function useGetLeaderboardSize(puzzleId: bigint) {
+export function useGetTopPlayers(count: bigint) {
   return useReadContract({
     address: CIPHER_PUZZLE_LAB_ADDRESS,
     abi: CIPHER_PUZZLE_LAB_ABI,
-    functionName: 'getLeaderboardSize',
-    args: [puzzleId],
+    functionName: 'getTopPlayers',
+    args: [count],
   });
 }
 
@@ -64,13 +62,6 @@ export function useCreatePuzzle() {
     puzzleId: bigint;
     title: string;
     description: string;
-    encryptedSolution: string;
-    difficultyScore: string;
-    inputProof: string;
-    difficulty: number;
-    duration: number;
-    maxAttempts: number;
-    availableHints: number;
     value: bigint;
   }) => {
     writeContract({
@@ -81,151 +72,35 @@ export function useCreatePuzzle() {
         params.puzzleId,
         params.title,
         params.description,
-        params.encryptedSolution as `0x${string}`,
-        params.difficultyScore as `0x${string}`,
-        params.inputProof as `0x${string}`,
-        params.difficulty,
-        params.duration,
-        params.maxAttempts,
-        params.availableHints,
       ],
       value: params.value,
-    });
+    } as const as any);
   };
 
   return { createPuzzle, hash, error, isPending, isConfirming, isSuccess };
 }
 
-export function useSubmitAttempt() {
+// FHE-enabled solution submission
+export function useSubmitSolution() {
   const { data: hash, writeContract, error, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
-  const submitAttempt = (params: {
+  const submitSolution = (params: {
     puzzleId: bigint;
-    encryptedAnswer: string;
-    timeTaken: string;
-    inputProof: string;
+    encryptedAnswer: `0x${string}`;  // bytes32 - encrypted answer
+    inputProof: `0x${string}`;        // bytes - FHE input proof
   }) => {
     writeContract({
       address: CIPHER_PUZZLE_LAB_ADDRESS,
       abi: CIPHER_PUZZLE_LAB_ABI,
-      functionName: 'submitAttempt',
+      functionName: 'submitSolution',
       args: [
         params.puzzleId,
-        params.encryptedAnswer as `0x${string}`,
-        params.timeTaken as `0x${string}`,
-        params.inputProof as `0x${string}`,
+        params.encryptedAnswer,
+        params.inputProof,
       ],
-    });
+    } as const as any);
   };
 
-  return { submitAttempt, hash, error, isPending, isConfirming, isSuccess };
-}
-
-export function usePurchaseHint() {
-  const { data: hash, writeContract, error, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
-
-  const purchaseHint = (params: {
-    puzzleId: bigint;
-    hintType: number;
-    hintValue: string;
-    inputProof: string;
-    value: bigint;
-  }) => {
-    writeContract({
-      address: CIPHER_PUZZLE_LAB_ADDRESS,
-      abi: CIPHER_PUZZLE_LAB_ABI,
-      functionName: 'purchaseHint',
-      args: [
-        params.puzzleId,
-        params.hintType,
-        params.hintValue as `0x${string}`,
-        params.inputProof as `0x${string}`,
-      ],
-      value: params.value,
-    });
-  };
-
-  return { purchaseHint, hash, error, isPending, isConfirming, isSuccess };
-}
-
-export function useActivatePuzzle() {
-  const { data: hash, writeContract, error, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
-
-  const activatePuzzle = (puzzleId: bigint) => {
-    writeContract({
-      address: CIPHER_PUZZLE_LAB_ADDRESS,
-      abi: CIPHER_PUZZLE_LAB_ABI,
-      functionName: 'activatePuzzle',
-      args: [puzzleId],
-    });
-  };
-
-  return { activatePuzzle, hash, error, isPending, isConfirming, isSuccess };
-}
-
-export function useEndPuzzle() {
-  const { data: hash, writeContract, error, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
-
-  const endPuzzle = (puzzleId: bigint) => {
-    writeContract({
-      address: CIPHER_PUZZLE_LAB_ADDRESS,
-      abi: CIPHER_PUZZLE_LAB_ABI,
-      functionName: 'endPuzzle',
-      args: [puzzleId],
-    });
-  };
-
-  return { endPuzzle, hash, error, isPending, isConfirming, isSuccess };
-}
-
-export function useRequestSolutionReveal() {
-  const { data: hash, writeContract, error, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
-
-  const requestReveal = (puzzleId: bigint) => {
-    writeContract({
-      address: CIPHER_PUZZLE_LAB_ADDRESS,
-      abi: CIPHER_PUZZLE_LAB_ABI,
-      functionName: 'requestSolutionReveal',
-      args: [puzzleId],
-    });
-  };
-
-  return { requestReveal, hash, error, isPending, isConfirming, isSuccess };
-}
-
-export function useRequestLeaderboardDecryption() {
-  const { data: hash, writeContract, error, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
-
-  const requestDecryption = (puzzleId: bigint, playerAddress: string) => {
-    writeContract({
-      address: CIPHER_PUZZLE_LAB_ADDRESS,
-      abi: CIPHER_PUZZLE_LAB_ABI,
-      functionName: 'requestLeaderboardDecryption',
-      args: [puzzleId, playerAddress as `0x${string}`],
-    });
-  };
-
-  return { requestDecryption, hash, error, isPending, isConfirming, isSuccess };
-}
-
-export function useDistributeRewards() {
-  const { data: hash, writeContract, error, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
-
-  const distributeRewards = (puzzleId: bigint) => {
-    writeContract({
-      address: CIPHER_PUZZLE_LAB_ADDRESS,
-      abi: CIPHER_PUZZLE_LAB_ABI,
-      functionName: 'distributeRewards',
-      args: [puzzleId],
-    });
-  };
-
-  return { distributeRewards, hash, error, isPending, isConfirming, isSuccess };
+  return { submitSolution, hash, error, isPending, isConfirming, isSuccess };
 }
