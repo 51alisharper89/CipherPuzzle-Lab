@@ -11,6 +11,7 @@ import '@rainbow-me/rainbowkit/styles.css';
 import Index from "./pages/Index";
 import Leaderboard from "./pages/Leaderboard";
 import PuzzleDetail from "./pages/PuzzleDetail";
+import MyActivity from "./pages/MyActivity";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="/my-activity" element={<MyActivity />} />
               <Route path="/puzzle/:id" element={<PuzzleDetail />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
