@@ -4,28 +4,33 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EnigmaVault - FHE Encrypted Puzzle Platform</title>
+    <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin" />
+    <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp" />
+    <link rel="preconnect" href="https://cdn.zama.org" />
+    <title>CipherPuzzle Lab - FHE Encrypted Puzzle Platform</title>
     <meta name="description" content="Solve encrypted puzzles with Fully Homomorphic Encryption. Compete fairly on-chain with privacy-preserving answers powered by Zama FHE." />
-    <meta name="author" content="EnigmaVault" />
+    <meta name="author" content="CipherPuzzle Lab" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <meta property="og:title" content="EnigmaVault - FHE Encrypted Puzzle Platform" />
+    <meta property="og:title" content="CipherPuzzle Lab - FHE Encrypted Puzzle Platform" />
     <meta property="og:description" content="Solve encrypted puzzles with Fully Homomorphic Encryption. Compete fairly on-chain with privacy-preserving answers." />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/logo.svg" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="EnigmaVault" />
+    <meta name="twitter:title" content="CipherPuzzle Lab" />
     <meta name="twitter:description" content="FHE Encrypted Puzzle Platform" />
   </head>
 
   <body>
     <div id="root"></div>
-    <!-- ✅ 加载FHE SDK全局脚本 (必须在main.tsx之前) -->
-    <!-- WASM 文件必须和 UMD 脚本在同一目录 -->
-    <script src="/relayer-sdk-js.umd.cjs"></script>
+    <script
+      src="https://cdn.zama.org/relayer-sdk-js/0.3.0-5/relayer-sdk-js.umd.cjs"
+      defer
+      crossorigin="anonymous"
+    ></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
