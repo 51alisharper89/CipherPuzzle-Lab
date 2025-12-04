@@ -1,40 +1,41 @@
-# 🔐 EnigmaVault
+# CipherPuzzle Lab
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Solidity](https://img.shields.io/badge/Solidity-0.8.24-blue)](https://soliditylang.org/)
-[![React](https://img.shields.io/badge/React-18.3.0-61DAFB?logo=react)](https://reactjs.org/)
-[![FHE](https://img.shields.io/badge/FHE-Zama_0.2.0-purple)](https://www.zama.ai/)
+[![React](https://img.shields.io/badge/React-18.3.1-61DAFB?logo=react)](https://reactjs.org/)
+[![FHE](https://img.shields.io/badge/FHE-Zama_fhEVM_0.9.1-purple)](https://www.zama.ai/)
 
 > A privacy-preserving puzzle platform powered by Zama's Fully Homomorphic Encryption (FHE) technology. Solve encrypted puzzles where your answers remain confidential throughout the entire process.
 
-[🎮 Live Demo](https://enigmavault.vercel.app) | [📖 FHE Guide](./FHE_COMPLIANCE_CHECK.md) | [🎯 Game Design](./docs/GameDesign.md)
+[Live Demo](https://cipherpuzzle-lab.vercel.app)
 
-## 🎬 Demo Video
+## Demo Video
 
 <div align="center">
 
-![EnigmaVault Demo](./.github/demo.mp4)
+![CipherPuzzle Lab Demo](./.github/demo.mp4)
 
-*See EnigmaVault in action: Connect wallet, solve encrypted puzzles, and watch FHE encryption work in real-time!*
+*See CipherPuzzle Lab in action: Connect wallet, solve encrypted puzzles, and watch FHE encryption work in real-time!*
 
-**📥 [Download Demo Video](./.github/demo.mp4)** • **🎮 [Try Live Demo](https://enigmavault.vercel.app)**
+**[Download Demo Video](./.github/demo.mp4)** | **[Try Live Demo](https://cipherpuzzle-lab.vercel.app)**
 
 </div>
 
 ---
 
-## 🌟 Features
+## Features
 
-- **🔒 Fully Homomorphic Encryption**: Answers are encrypted client-side and remain encrypted on-chain
-- **🎯 5 Active Puzzles**: Mathematical and cryptographic challenges with ETH rewards
-- **⚡ Real-time Verification**: Smart contract validates encrypted answers without decryption
-- **🏆 Leaderboard System**: Track top puzzle solvers (coming soon)
-- **💎 Modern UI**: Clean, responsive interface with Linear design principles
-- **🔗 Web3 Integration**: Connect via MetaMask or other Web3 wallets
+- **Fully Homomorphic Encryption**: Answers are encrypted client-side and remain encrypted on-chain
+- **10 Active Puzzles**: Mathematical and cryptographic challenges with ETH rewards
+- **Real-time Verification**: Smart contract validates encrypted answers without decryption
+- **Activity Tracking**: View your puzzle solving history and rewards earned
+- **Leaderboard System**: Track top puzzle solvers
+- **Modern UI**: Clean, responsive interface with Linear design principles
+- **Web3 Integration**: Connect via MetaMask, RainbowKit or other Web3 wallets
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [How It Works](#how-it-works)
 - [Technology Stack](#technology-stack)
@@ -48,7 +49,7 @@
 
 ---
 
-## 🔍 How It Works
+## How It Works
 
 ### User Flow
 
@@ -58,9 +59,11 @@
 
 ### Encryption Process
 
-1. **Client-Side Encryption**: User's answer is encrypted using Zama FHE SDK
+1. **Client-Side Encryption**: User's answer is encrypted using Zama FHE SDK (CDN loaded)
    ```typescript
-   const { handle, proof } = await encryptUint32(answer, contractAddress, userAddress);
+   const input = instance.createEncryptedInput(contractAddress, userAddress);
+   input.add32(answer);
+   const { handles, inputProof } = await input.encrypt();
    ```
 
 2. **Zero-Knowledge Proof**: A proof is generated to verify the encrypted data
@@ -74,75 +77,78 @@
    ```
 
 4. **Privacy-Preserving Scoring**: Points are awarded without revealing the answer
-   ```solidity
-   euint32 pointsToAdd = FHE.select(isCorrect, FHE.asEuint32(100), FHE.asEuint32(0));
-   ```
 
 ---
 
-## 🛠 Technology Stack
+## Technology Stack
 
 ### Smart Contracts
 - **Solidity**: `^0.8.24`
-- **Zama fhEVM**: `@fhevm/solidity@^0.8.0`
-- **Hardhat**: Development environment
+- **Zama fhEVM**: `@fhevm/solidity@^0.9.1`
+- **Hardhat**: `^2.22.0`
 - **Network**: Sepolia Testnet
 
 ### Frontend
-- **React**: `18.3.0` with TypeScript
-- **Vite**: `5.4.2` - Build tool
-- **wagmi**: `2.21.3` - Web3 React hooks
-- **viem**: `2.21.3` - Ethereum utilities
-- **Zama FHE SDK**: `@zama-fhe/relayer-sdk@0.2.0`
+- **React**: `18.3.1` with TypeScript
+- **Vite**: `5.4.19` - Build tool
+- **wagmi**: `2.18.1` - Web3 React hooks
+- **viem**: `2.40.3` - Ethereum utilities
+- **RainbowKit**: `2.2.9` - Wallet connection
+- **Zama FHE SDK**: `@zama-fhe/relayer-sdk@0.3.0-5` (CDN loaded)
 - **shadcn/ui**: Modern UI components
-- **TailwindCSS**: Styling
+- **TailwindCSS**: `3.4.17` - Styling
 
 ### Development Tools
-- **TypeScript**: `5.5.3`
+- **TypeScript**: `5.9.3`
 - **ESLint**: Code quality
 - **Hardhat**: Smart contract testing & deployment
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 CipherPuzzle-Lab/
 ├── contracts/
-│   ├── EnigmaVaultFHE.sol      # Full FHE implementation
-│   ├── EnigmaVaultMock.sol     # Sepolia-compatible mock version
-│   └── EnigmaVault.sol         # Simplified version
+│   ├── EnigmaVaultFHE.sol      # Full FHE implementation (deployed)
+│   └── SimpleCounter.sol       # Test contract
 │
 ├── dapp_web/                    # Frontend React application
 │   ├── src/
 │   │   ├── components/          # UI components
-│   │   ├── pages/              # Route pages
-│   │   │   ├── Index.tsx       # Puzzle list
+│   │   ├── pages/
+│   │   │   ├── Index.tsx        # Puzzle list
 │   │   │   ├── PuzzleDetail.tsx # Puzzle solving interface
-│   │   │   └── Leaderboard.tsx # Rankings (coming soon)
+│   │   │   └── MyActivity.tsx   # User activity history
 │   │   ├── config/
-│   │   │   ├── contract.ts     # Contract ABI & address
-│   │   │   └── wagmi.ts        # Web3 configuration
-│   │   └── utils/
-│   │       └── fhe.ts          # FHE encryption utilities
-│   └── public/
-│       ├── relayer-sdk-js.umd.cjs # FHE SDK UMD bundle
-│       ├── kms_lib_bg.wasm     # WASM for key management
-│       └── tfhe_bg.wasm        # WASM for FHE operations
+│   │   │   ├── contract.ts      # Contract ABI & address
+│   │   │   └── wagmi.ts         # Web3 configuration
+│   │   ├── hooks/
+│   │   │   ├── useFHE.ts        # FHE encryption hook (CDN SDK)
+│   │   │   ├── useContract.ts   # Contract interaction hooks
+│   │   │   └── usePuzzleActions.ts # Puzzle action hooks
+│   │   └── lib/
+│   │       └── toast-utils.tsx  # Toast notification utilities
+│   ├── index.html               # CDN script for FHE SDK
+│   └── vercel.json              # SPA routing config
 │
-├── scripts/                     # Deployment & utility scripts
-│   ├── deploy-mock.js          # Deploy mock contract
-│   ├── create-puzzles-mock.js  # Create test puzzles
-│   └── check-puzzles.js        # Verify puzzle status
+├── scripts/
+│   ├── deploy-fhe.ts            # Deploy FHE contract
+│   ├── create-puzzles-fhe.ts    # Create puzzles with FHE
+│   └── create-puzzles.js        # Create test puzzles
 │
-├── hardhat.config.ts           # Hardhat configuration
-├── FHE_COMPLIANCE_CHECK.md     # FHE implementation guide
-└── README.md                   # This file
+├── test/                        # Contract tests
+│   ├── EnigmaVault.test.js
+│   ├── EnigmaVaultFHE.test.js
+│   └── SimpleCounter.test.js
+│
+├── hardhat.config.ts            # Hardhat configuration
+└── README.md                    # This file
 ```
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -188,16 +194,16 @@ CipherPuzzle-Lab/
    cd dapp_web
    npm run dev
    ```
-   Frontend will be available at http://localhost:8080
+   Frontend will be available at http://localhost:5173
 
 2. **Compile smart contracts**
    ```bash
-   npx hardhat compile
+   npm run compile
    ```
 
-3. **Run tests** (optional)
+3. **Run tests**
    ```bash
-   npx hardhat test
+   npm run test
    ```
 
 ### Quick Test
@@ -205,26 +211,26 @@ CipherPuzzle-Lab/
 1. Connect your wallet (Sepolia network)
 2. Browse available puzzles
 3. Click on a puzzle to view details
-4. Enter your answer (e.g., "2009" for The Genesis Block)
-5. Submit and watch the FHE encryption process in console
+4. Enter your answer
+5. Submit and watch the FHE encryption process
 6. Transaction confirms on Sepolia!
 
 ---
 
-## 📜 Smart Contracts
+## Smart Contracts
 
 ### Deployed Contracts
 
-**EnigmaVaultMock** (Sepolia Testnet)
+**EnigmaVaultFHE** (Sepolia Testnet)
 ```
-Address: 0x362826cE7c0d18E9029d1E5F4Bf4C0894eE749f6
+Address: 0x5A03982D1859C5A3f60745358F1b8d6019462C9B
 Network: Sepolia (chainId: 11155111)
-Explorer: https://sepolia.etherscan.io/address/0x362826cE7c0d18E9029d1E5F4Bf4C0894eE749f6
+Explorer: https://sepolia.etherscan.io/address/0x5A03982D1859C5A3f60745358F1b8d6019462C9B
 ```
 
 ### Contract Features
 
-#### EnigmaVaultFHE.sol (Full FHE)
+#### EnigmaVaultFHE.sol
 ```solidity
 struct Puzzle {
     string title;
@@ -233,71 +239,59 @@ struct Puzzle {
     address creator;
     bool isActive;
     uint256 solvers;
-    euint32 correctAnswer;  // ✅ FHE encrypted storage
+    euint32 correctAnswer;  // FHE encrypted storage
 }
 
 function submitSolution(
     uint256 puzzleId,
-    externalEuint32 encryptedAnswer,  // ✅ Encrypted input
-    bytes calldata inputProof          // ✅ Zero-knowledge proof
-) external;
-```
-
-#### EnigmaVaultMock.sol (Sepolia Compatible)
-```solidity
-// Uses hash comparison for Sepolia compatibility
-// Same interface for frontend integration
-function submitSolution(
-    uint256 puzzleId,
-    bytes32 encryptedAnswer,
-    bytes calldata inputProof
+    externalEuint32 encryptedAnswer,  // Encrypted input
+    bytes calldata inputProof          // Zero-knowledge proof
 ) external;
 ```
 
 ### Active Puzzles
 
-| ID | Title | Answer | Reward | Difficulty |
-|----|-------|--------|--------|-----------|
-| 1 | The Genesis Block | 2009 | 0.002 ETH | Easy |
-| 2 | Binary Sequence | 64 | 0.001 ETH | Easy |
-| 3 | Fibonacci Mystery | 34 | 0.0015 ETH | Medium |
-| 4 | Prime Number Hunt | 17 | 0.001 ETH | Easy |
-| 5 | Satoshi's Treasure | 100000000 | 0.002 ETH | Medium |
+| ID | Title | Reward | Difficulty |
+|----|-------|--------|-----------|
+| 1 | The Genesis Block | 0.001 ETH | Easy |
+| 2 | Binary Sequence | 0.001 ETH | Easy |
+| 3 | Fibonacci Mystery | 0.0015 ETH | Medium |
+| 4 | Prime Number Hunt | 0.001 ETH | Easy |
+| 5 | Satoshi's Treasure | 0.002 ETH | Medium |
+| 6 | The Golden Ratio | 0.0015 ETH | Medium |
+| 7 | Hash Power | 0.001 ETH | Easy |
+| 8 | Merkle Root | 0.002 ETH | Hard |
+| 9 | Block Time | 0.001 ETH | Easy |
+| 10 | Gas Limit | 0.0015 ETH | Medium |
 
 ---
 
-## 🔐 FHE Implementation
+## FHE Implementation
 
-### Client-Side Encryption
+### Client-Side Encryption (CDN SDK)
 
 ```typescript
-// utils/fhe.ts
-import { createInstance, initSDK, SepoliaConfig } from '@zama-fhe/relayer-sdk/bundle';
+// hooks/useFHE.ts
+// SDK is loaded via CDN in index.html
+const sdk = window.RelayerSDK;
+const { initSDK, createInstance, SepoliaConfig } = sdk;
 
-export async function encryptUint32(
-  value: number,
-  contractAddress: string,
-  userAddress: string
-): Promise<{ handle: string; proof: string }> {
-  const fhe = await initializeFHE();
+await initSDK();
+const instance = await createInstance({ ...SepoliaConfig, network: provider });
 
-  // Create encrypted input
-  const input = await fhe.createEncryptedInput(
-    getAddress(contractAddress),
-    getAddress(userAddress)
-  );
+// Encrypt answer
+const input = instance.createEncryptedInput(contractAddress, userAddress);
+input.add32(answerValue);
+const { handles, inputProof } = await input.encrypt();
+```
 
-  // Add value to encrypt
-  input.add32(value);
-
-  // Generate handle and proof
-  const { handles, inputProof } = await input.encrypt();
-
-  return {
-    handle: hexlify(handles[0]),
-    proof: hexlify(inputProof)
-  };
-}
+### CDN Script (index.html)
+```html
+<script
+  src="https://cdn.zama.org/relayer-sdk-js/0.3.0-5/relayer-sdk-js.umd.cjs"
+  defer
+  crossorigin="anonymous"
+></script>
 ```
 
 ### Contract-Side Verification
@@ -317,15 +311,8 @@ function submitSolution(
     ebool isCorrect = FHE.eq(userAnswer, puzzle.correctAnswer);
     FHE.allowThis(isCorrect);
 
-    // Conditional scoring using FHE.select
-    euint32 pointsToAdd = FHE.select(
-        isCorrect,
-        FHE.asEuint32(100),  // Correct: +100 points
-        FHE.asEuint32(0)     // Wrong: +0 points
-    );
-
-    // Award points (still encrypted)
-    playerPoints[msg.sender] += 100;
+    // Award points based on result
+    // ...
 }
 ```
 
@@ -335,28 +322,11 @@ function submitSolution(
 2. **externalEuint32**: Type for receiving encrypted data from frontend
 3. **FHE.fromExternal()**: Imports and verifies encrypted external data
 4. **FHE.eq()**: Homomorphic equality comparison
-5. **FHE.select()**: Conditional selection (ternary operator for encrypted data)
-6. **FHE.allowThis()**: Grant contract permission to use encrypted data
-
-### WASM Configuration
-
-The FHE SDK requires WebAssembly files to be loaded:
-
-```html
-<!-- index.html -->
-<script src="/relayer-sdk-js.umd.cjs"></script>
-```
-
-Files needed in `public/`:
-- `relayer-sdk-js.umd.cjs` - SDK bundle
-- `kms_lib_bg.wasm` - Key management
-- `tfhe_bg.wasm` - FHE operations
-
-**Note**: WASM files must be in the same directory as the UMD script for proper loading.
+5. **FHE.allowThis()**: Grant contract permission to use encrypted data
 
 ---
 
-## 🚀 Deployment
+## Deployment
 
 ### Deploy Contract to Sepolia
 
@@ -368,24 +338,23 @@ Files needed in `public/`:
 
 2. **Compile contracts**
    ```bash
-   npx hardhat compile
+   npm run compile
    ```
 
-3. **Deploy EnigmaVaultMock**
+3. **Deploy EnigmaVaultFHE**
    ```bash
-   npx hardhat run scripts/deploy-mock.js --network sepolia
+   SEPOLIA_RPC_URL="https://ethereum-sepolia-rpc.publicnode.com" npx hardhat run scripts/deploy-fhe.ts --network sepolia
    ```
-   Note the deployed contract address.
 
 4. **Create puzzles**
    ```bash
-   npx hardhat run scripts/create-puzzles-mock.js --network sepolia
+   SEPOLIA_RPC_URL="https://ethereum-sepolia-rpc.publicnode.com" npx hardhat run scripts/create-puzzles-fhe.ts --network sepolia
    ```
 
 5. **Update frontend config**
    ```typescript
    // dapp_web/src/config/contract.ts
-   export const CIPHER_PUZZLE_LAB_ADDRESS = '0x362826cE7c0d18E9029d1E5F4Bf4C0894eE749f6';
+   export const CIPHER_PUZZLE_LAB_ADDRESS = '0x5A03982D1859C5A3f60745358F1b8d6019462C9B';
    ```
 
 ### Deploy Frontend
@@ -393,18 +362,14 @@ Files needed in `public/`:
 ```bash
 cd dapp_web
 npm run build
-# Deploy dist/ folder to your hosting service
+# Deploy dist/ folder to Vercel or other hosting
 ```
 
-**Recommended hosting**:
-- Vercel
-- Netlify
-- GitHub Pages
-- IPFS
+**Live URL**: https://cipherpuzzle-lab.vercel.app
 
 ---
 
-## 🤝 Contributors
+## Contributors
 
 ### Core Development
 - **Lead Developer**: [@51alisharper89](https://github.com/51alisharper89)
@@ -419,21 +384,18 @@ npm run build
   - UI/UX implementation
   - Web3 wallet connection
 
-**Special Thanks**: [@O4ju5SaFxC2bXZ](https://github.com/O4ju5SaFxC2bXZ) for the exceptional frontend adaptation and FHE client-side encryption implementation!
-
 ---
 
-## 📚 Additional Resources
+## Additional Resources
 
 - [Zama FHE Documentation](https://docs.zama.ai/fhevm)
-- [FHE Implementation Guide](./FHE_COMPLIANCE_CHECK.md)
-- [Game Design Document](./docs/GameDesign.md)
 - [Hardhat Documentation](https://hardhat.org/docs)
 - [wagmi Documentation](https://wagmi.sh/)
+- [RainbowKit Documentation](https://www.rainbowkit.com/docs)
 
 ---
 
-## 🔒 Security Considerations
+## Security Considerations
 
 1. **Answer Privacy**: User answers are encrypted before leaving the browser
 2. **On-chain Privacy**: Encrypted answers remain encrypted on the blockchain
@@ -441,24 +403,24 @@ npm run build
 4. **ACL Management**: Proper FHE access control using `allowThis()`
 5. **Proof Validation**: Zero-knowledge proofs ensure encrypted data validity
 
-**⚠️ Note**: This is a testnet demonstration. Do not use on mainnet without thorough auditing.
+**Note**: This is a testnet demonstration. Do not use on mainnet without thorough auditing.
 
 ---
 
-## 📝 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 🔮 Roadmap
+## Roadmap
 
 - [x] FHE integration with Zama SDK
 - [x] Basic puzzle platform
 - [x] Web3 wallet connection
 - [x] Sepolia testnet deployment
-- [ ] Scoring system optimization for FHE
-- [ ] Leaderboard functionality
+- [x] Activity tracking page
+- [x] Leaderboard functionality
 - [ ] Additional puzzle types
 - [ ] NFT rewards for top solvers
 - [ ] Mobile responsive improvements
@@ -466,7 +428,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 💬 Support
+## Support
 
 - **Issues**: [GitHub Issues](https://github.com/51alisharper89/CipherPuzzle-Lab/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/51alisharper89/CipherPuzzle-Lab/discussions)
@@ -475,8 +437,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <div align="center">
 
-**Built with ❤️ using Zama FHE**
+**Built with Zama FHE**
 
-[⬆ Back to Top](#-enigmavault)
+[Back to Top](#cipherpuzzle-lab)
 
 </div>
